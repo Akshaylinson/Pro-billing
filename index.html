@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Billing System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        accent: '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .invoice-item:last-child .remove-item {
+            display: none;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-primary">Professional Billing System</h1>
+                <div class="flex space-x-4">
+                    <button id="printBtn" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition no-print">
+                        <i class="fas fa-print mr-2"></i>Print
+                    </button>
+                    <button id="newInvoiceBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition no-print">
+                        <i class="fas fa-plus mr-2"></i>New Invoice
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Company & Customer Info -->
+            <div class="lg:col-span-1 space-y-8 no-print">
+                <!-- Company Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-secondary mb-4">Company Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                            <input type="text" id="companyName" class="w-full p-2 border border-gray-300 rounded-md" value="ABC Traders Pvt. Ltd.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <textarea id="companyAddress" class="w-full p-2 border border-gray-300 rounded-md" rows="3">123 Business Street, City Center, Mumbai, India</textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Info</label>
+                            <input type="text" id="companyContact" class="w-full p-2 border border-gray-300 rounded-md" value="Phone: +91-9876543210 | Email: info@abctraders.com">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-secondary mb-4">Customer Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                            <input type="text" id="customerName" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter customer name">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-secondary mb-4">Actions</h2>
+                    <div class="space-y-4">
+                        <button id="generatePdfBtn" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-file-pdf mr-2"></i>Generate PDF Invoice
+                        </button>
+                        <div id="downloadSection" class="hidden">
+                            <p class="text-green-600 mb-2">Invoice generated successfully!</p>
+                            <a id="downloadLink" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition block text-center">
+                                <i class="fas fa-download mr-2"></i>Download Invoice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Items & Summary -->
+            <div class="lg:col-span-2">
+                <!-- Invoice Items -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h2 class="text-xl font-semibold text-secondary mb-4">Invoice Items</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="text-left p-3">Item Description</th>
+                                    <th class="text-center p-3">Quantity</th>
+                                    <th class="text-right p-3">Price (₹)</th>
+                                    <th class="text-right p-3">Total (₹)</th>
+                                    <th class="text-center p-3 no-print">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsList">
+                                <tr class="invoice-item border-t">
+                                    <td class="p-3"><input type="text" class="w-full p-2 border border-gray-300 rounded-md item-name" placeholder="Item name"></td>
+                                    <td class="p-3"><input type="number" min="1" value="1" class="w-20 p-2 border border-gray-300 rounded-md item-quantity"></td>
+                                    <td class="p-3"><input type="number" min="0" step="0.01" value="0.00" class="w-24 p-2 border border-gray-300 rounded-md item-price"></td>
+                                    <td class="p-3 text-right item-total">0.00</td>
+                                    <td class="p-3 text-center no-print">
+                                        <button class="remove-item text-red-600 hover:text-red-800">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button id="addItemBtn" class="mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition no-print">
+                        <i class="fas fa-plus mr-2"></i>Add Item
+                    </button>
+                </div>
+
+                <!-- Invoice Summary -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold text-secondary mb-4">Invoice Summary</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Discount (₹)</label>
+                                <input type="number" min="0" step="0.01" value="0.00" id="discount" class="w-full p-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                                <input type="number" min="0" step="0.01" value="0.00" id="taxRate" class="w-full p-2 border border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between py-2">
+                                <span class="font-medium">Subtotal:</span>
+                                <span id="subtotal">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <span class="font-medium">Discount:</span>
+                                <span id="discountValue">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <span class="font-medium">Tax:</span>
+                                <span id="taxValue">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-t border-gray-300 mt-2 pt-2">
+                                <span class="font-bold text-lg">Total:</span>
+                                <span id="finalTotal" class="font-bold text-lg">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const itemsList = document.getElementById('itemsList');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            const downloadSection = document.getElementById('downloadSection');
+            const downloadLink = document.getElementById('downloadLink');
+            const printBtn = document.getElementById('printBtn');
+            const newInvoiceBtn = document.getElementById('newInvoiceBtn');
+            
+            // Form elements
+            const customerName = document.getElementById('customerName');
+            const companyName = document.getElementById('companyName');
+            const companyAddress = document.getElementById('companyAddress');
+            const companyContact = document.getElementById('companyContact');
+            const discountInput = document.getElementById('discount');
+            const taxRateInput = document.getElementById('taxRate');
+            
+            // Summary elements
+            const subtotalEl = document.getElementById('subtotal');
+            const discountValueEl = document.getElementById('discountValue');
+            const taxValueEl = document.getElementById('taxValue');
+            const finalTotalEl = document.getElementById('finalTotal');
+            
+            // Add new item row
+            addItemBtn.addEventListener('click', function() {
+                const newItem = document.createElement('tr');
+                newItem.className = 'invoice-item border-t';
+                newItem.innerHTML = `
+                    <td class="p-3"><input type="text" class="w-full p-2 border border-gray-300 rounded-md item-name" placeholder="Item name"></td>
+                    <td class="p-3"><input type="number" min="1" value="1" class="w-20 p-2 border border-gray-300 rounded-md item-quantity"></td>
+                    <td class="p-3"><input type="number" min="0" step="0.01" value="0.00" class="w-24 p-2 border border-gray-300 rounded-md item-price"></td>
+                    <td class="p-3 text-right item-total">0.00</td>
+                    <td class="p-3 text-center no-print">
+                        <button class="remove-item text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                itemsList.appendChild(newItem);
+                
+                // Add event listeners to new inputs
+                const quantityInput = newItem.querySelector('.item-quantity');
+                const priceInput = newItem.querySelector('.item-price');
+                
+                quantityInput.addEventListener('input', calculateItemTotal);
+                priceInput.addEventListener('input', calculateItemTotal);
+                
+                // Add event listener to remove button
+                newItem.querySelector('.remove-item').addEventListener('click', function() {
+                    newItem.remove();
+                    calculateTotals();
+                });
+            });
+            
+            // Calculate item total
+            function calculateItemTotal() {
+                const row = this.closest('tr');
+                const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const total = quantity * price;
+                
+                row.querySelector('.item-total').textContent = total.toFixed(2);
+                calculateTotals();
+            }
+            
+            // Calculate all totals
+            function calculateTotals() {
+                let subtotal = 0;
+                const itemRows = document.querySelectorAll('.invoice-item');
+                
+                itemRows.forEach(row => {
+                    const total = parseFloat(row.querySelector('.item-total').textContent) || 0;
+                    subtotal += total;
+                });
+                
+                const discount = parseFloat(discountInput.value) || 0;
+                const taxRate = parseFloat(taxRateInput.value) || 0;
+                const taxAmount = subtotal * (taxRate / 100);
+                const finalTotal = subtotal - discount + taxAmount;
+                
+                subtotalEl.textContent = `₹${subtotal.toFixed(2)}`;
+                discountValueEl.textContent = `-₹${discount.toFixed(2)}`;
+                taxValueEl.textContent = `₹${taxAmount.toFixed(2)}`;
+                finalTotalEl.textContent = `₹${finalTotal.toFixed(2)}`;
+            }
+            
+            // Generate PDF
+            generatePdfBtn.addEventListener('click', function() {
+                // Validate form
+                if (!customerName.value.trim()) {
+                    alert('Please enter customer name');
+                    return;
+                }
+                
+                // Collect items
+                const items = [];
+                const itemRows = document.querySelectorAll('.invoice-item');
+                
+                itemRows.forEach(row => {
+                    const name = row.querySelector('.item-name').value;
+                    const quantity = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                    
+                    if (name && quantity > 0 && price > 0) {
+                        items.push({
+                            name: name,
+                            quantity: quantity,
+                            price: price
+                        });
+                    }
+                });
+                
+                if (items.length === 0) {
+                    alert('Please add at least one valid item');
+                    return;
+                }
+                
+                // Prepare data for API
+                const data = {
+                    customer_name: customerName.value,
+                    company_info: {
+                        name: companyName.value,
+                        address: companyAddress.value,
+                        contact: companyContact.value
+                    },
+                    items: items,
+                    discount: parseFloat(discountInput.value) || 0,
+                    tax: parseFloat(taxRateInput.value) || 0
+                };
+                
+                // Send request to backend
+                fetch('/generate_invoice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        downloadSection.classList.remove('hidden');
+                        downloadLink.href = `/download_invoice/${data.filename}`;
+                        downloadLink.download = data.filename;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while generating the invoice');
+                });
+            });
+            
+            // Print invoice
+            printBtn.addEventListener('click', function() {
+                window.print();
+            });
+            
+            // New invoice
+            newInvoiceBtn.addEventListener('click', function() {
+                if (confirm('Create a new invoice? Current data will be cleared.')) {
+                    // Clear customer info
+                    customerName.value = '';
+                    
+                    // Clear items (keep one empty row)
+                    itemsList.innerHTML = `
+                        <tr class="invoice-item border-t">
+                            <td class="p-3"><input type="text" class="w-full p-2 border border-gray-300 rounded-md item-name" placeholder="Item name"></td>
+                            <td class="p-3"><input type="number" min="1" value="1" class="w-20 p-2 border border-gray-300 rounded-md item-quantity"></td>
+                            <td class="p-3"><input type="number" min="0" step="0.01" value="0.00" class="w-24 p-2 border border-gray-300 rounded-md item-price"></td>
+                            <td class="p-3 text-right item-total">0.00</td>
+                            <td class="p-3 text-center no-print">
+                                <button class="remove-item text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    // Reset totals
+                    discountInput.value = '0.00';
+                    taxRateInput.value = '0.00';
+                    calculateTotals();
+                    
+                    // Hide download section
+                    downloadSection.classList.add('hidden');
+                    
+                    // Reattach event listeners
+                    attachEventListeners();
+                }
+            });
+            
+            // Attach event listeners to inputs
+            function attachEventListeners() {
+                // Item inputs
+                document.querySelectorAll('.item-quantity, .item-price').forEach(input => {
+                    input.addEventListener('input', calculateItemTotal);
+                });
+                
+                // Remove buttons
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', function() {
+                        this.closest('tr').remove();
+                        calculateTotals();
+                    });
+                });
+                
+                // Discount and tax
+                discountInput.addEventListener('input', calculateTotals);
+                taxRateInput.addEventListener('input', calculateTotals);
+            }
+            
+            // Initialize
+            attachEventListeners();
+            calculateTotals();
+        });
+    </script>
+</body>
+</html>
